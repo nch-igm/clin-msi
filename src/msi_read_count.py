@@ -1,11 +1,22 @@
 import re, os, sys, collections, glob, csv
 from xlsxwriter.workbook import Workbook
-
+from urllib.parse import urlparse
+import argparse
+import pysam
 
 path_to_bam_file = sys.argv[1]
 sample_name = sys.argv[2]
 output_dir = sys.argv[3]
 outputtable = open('{}/msi_count_table_{}.tsv'.format(output_dir, sample_name), 'w')
+
+def msi_read_count_argparser():
+    parser = argparse.ArgumentParser(description="")
+    parser.add_argument('--input-file', action='append', nargs='+',choices={"male", "female"}, required=True)
+    parser.add_argument('--bam', action='append', nargs='+', choices={"normal", "tumor"}, required=True)
+    parser.add_argument('--reference', action='append', nargs='+', required=True)
+    parser.add_argument('--output-dir', type=str, required=True, help="<REQUIRED> provide the s3 output path")
+
+    return parser
 
 
 def convert_tsv_to_xlsx(tsv_file):

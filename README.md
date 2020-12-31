@@ -1,10 +1,6 @@
-# IGM Churchill Variant Calling Tools
+# Clin-MSI
 
-Source code for variant calling related processes in Churchill.
-
-- Mutect2
-- Haplotype Caller
-- Genotype process for generating multi-sample VCFs
+Source code MSI Detection in tumor samples.
 
 ## Installation
 
