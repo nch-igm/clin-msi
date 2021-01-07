@@ -4,6 +4,7 @@ import re
 from operator import itemgetter
 from collections import defaultdict
 import pandas as pd
+from msiPlotter.deployment_scripts.parseRaw import parse_raw_data
 
 def clin_msi_argparser():
     parser = argparse.ArgumentParser(description="")
@@ -90,7 +91,10 @@ def clin_msi():
         df['Repeat_Length'] = length_list
         df[f'{chr}:{start}-{stop}'] = repeat_count_list
 
-    df.to_csv('test_with_mismatch.csv', index=False)
+        normalized_df = parse_raw_data(df, args.sample_name)
+
+
+    normalized_df.to_csv('test_normalized.csv', index=False)
 
 if __name__ == '__main__':
     clin_msi()
