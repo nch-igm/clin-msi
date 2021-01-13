@@ -14,10 +14,11 @@ def clin_msi_argparser():
     parser.add_argument('--sample-name', type=str, required=True)
     parser.add_argument('--output-dir', type=str, required=True, help="")
     parser.add_argument('--allow-mismatch', action='store_true', help="allows a single base mismatch within the repeat region")
+    parser.add_argument('--training', action='store_true')
 
     return parser
 
-def repetitions(s):
+def repeat_finder(s):
     #Taken from https://stackoverflow.com/questions/9079797/detect-repetitions-in-string
     r = re.compile(r"(.+?)\1+")
     for match in r.finditer(s):
@@ -32,7 +33,7 @@ def parse_input_file(input_file):
 
     return location_list
 
-def clin_msi():
+def count_repeats():
     parser = clin_msi_argparser()
     args = parser.parse_args()
 
@@ -46,7 +47,7 @@ def clin_msi():
         #get expected repeat length from provided reference file
         length_dict = defaultdict(int)
         fasta_seq = pysam.faidx(args.reference, f"{chr}:{start-10}-{stop+10}").split('\n')[1]
-        rep_list = list(repetitions(fasta_seq))
+        rep_list = list(repeat_finder(fasta_seq))
         largest_rep_unit = max(rep_list, key=itemgetter(1))[0]
         largest_rep_len = int(max(rep_list, key=itemgetter(1))[1])
         get_flanks = re.search(fr"(\w{{5}}){largest_rep_unit}{{{largest_rep_len}}}(\w{{5}})", fasta_seq)
@@ -97,4 +98,4 @@ def clin_msi():
     normalized_df.to_csv('test_normalized.csv', index=False)
 
 if __name__ == '__main__':
-    clin_msi()
+    count_repeats()

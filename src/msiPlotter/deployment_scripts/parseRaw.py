@@ -15,8 +15,6 @@ Should take < 1 minutes to run
 import argparse
 import pandas as pd
 import numpy as np
-import os
-import re
 
 
 def parse_raw_data(repeat_df, sample_name):
