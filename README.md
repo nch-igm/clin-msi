@@ -1,6 +1,6 @@
 # Clin-MSI
 
-Source code MSI Detection in tumor samples.
+Source code for MSI Detection in tumor samples.
 
 ## Installation
 
@@ -12,8 +12,21 @@ source .venv/bin/activate
 pip install .
 ~~~~
 
-Build docker image
+Install using Bioconda
 
-~~~~bash
-docker-compose build
-~~~~
+    conda install -c bioconda clin-msi
+
+## How to use clin-msi?
+### Usage:
+    msisensor-pro <command> [options]
+
+### Key Commands:
+* **train**
+
+
+    Train your model by supplying BAM files with their associated MSI status
+    
+* **predict**
+
+
+    Predict the MSI status of a BAM by comparing it to your trained model
