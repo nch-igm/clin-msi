@@ -13,8 +13,8 @@ def clin_msi_argparser():
     parser.add_argument('--reference', type=str, required=True, help="path to reference(.fa or .fasta) file with index (.fai) in the same directory")
     parser.add_argument('--sample-name', type=str, required=True)
     parser.add_argument('--output-dir', type=str, required=True, help="")
+    #parser.add_argument('--model-path', type=str, required=True, help="")
     parser.add_argument('--allow-mismatch', action='store_true', help="allows a single base mismatch within the repeat region")
-    parser.add_argument('--training', action='store_true')
 
     return parser
 
@@ -54,8 +54,8 @@ def count_repeats():
         left_flank = get_flanks.group(1)
         right_flank = get_flanks.group(2)
 
-        #Don't count reads that are unmapped, duplicate, qual=0
-        for read in bam_file.fetch(chr, start-500, stop+500):
+        #Skip reads that are unmapped, duplicate, or qual=0
+        for read in bam_file.fetch(chr, start, stop):
             if read.is_duplicate:
                 continue
             if read.is_unmapped:
@@ -91,7 +91,7 @@ def count_repeats():
 
         df['Repeat_Length'] = length_list
         df[f'{chr}:{start}-{stop}'] = repeat_count_list
-
+        df.to_csv('test_raw_count.csv', index=False)
         normalized_df = parse_raw_data(df, args.sample_name)
 
 
