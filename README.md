@@ -18,7 +18,7 @@ Install using Bioconda
 
 ## How to use clin-msi?
 ### Usage:
-    msisensor-pro <command> [options]
+    clin-msi <command> [options]
 
 ### Key Commands:
 * **train**
