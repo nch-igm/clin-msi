@@ -36,7 +36,7 @@ def parse_raw_data(repeat_df, sample_name):
 	# turn this into a single sample and add the proper feature names
 	raveled_data = df_data.T.values.ravel()
 	#print(df_data)
-	columns = np.repeat(repeat_df['Repeat_Length']+'_',df_data.shape[1]) + np.repeat(df_data.columns,df_data.shape[0])
+	columns = np.tile(repeat_df['Repeat_Length']+'_',df_data.shape[1]) + np.repeat(df_data.columns,df_data.shape[0])
 	single_sample_df = pd.DataFrame(raveled_data.reshape(1,-1),columns=columns ,index=[sample_name])
 	
 	return single_sample_df
