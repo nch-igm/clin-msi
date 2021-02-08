@@ -4,7 +4,7 @@ import re
 from operator import itemgetter
 from collections import defaultdict
 import pandas as pd
-from msiPlotter.deployment_scripts.parseRaw import parse_raw_data
+from msiPlotter.parseRaw import parse_raw_data
 
 def clin_msi_argparser():
     parser = argparse.ArgumentParser(description="")
