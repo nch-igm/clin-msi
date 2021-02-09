@@ -17,7 +17,28 @@ import pandas as pd
 import numpy as np
 
 
-def parse_raw_data(repeat_df, sample_name):
+
+def feature_mean_std(repeat_df, sample_name):
+	std = repeat_df.std(axis=0)
+	u = repeat_df.mean(axis=0)
+	std.index = std.index + '_std'
+	u.index = u.index + '_u'
+	single_sample_df = pd.DataFrame(pd.concat([u, std]).T,columns=[sample_name]).T
+	return single_sample_df
+
+def normalizeZscore(repeat_df, sample_name):
+	mu = repeat_df.mean(axis=0)
+	std = repeat_df.std(axis=0)
+	df_data = (repeat_df.iloc[:, 1:] - mu) / std # ignore repeat_length column
+	df_data.fillna(0, inplace=True)
+	# turn this into a single sample and add the proper feature names
+	raveled_data = df_data.T.values.ravel()
+	#print(df_data)
+	columns = np.tile(repeat_df['Repeat_Length']+'_',df_data.shape[1]) + np.repeat(df_data.columns,df_data.shape[0])
+	single_sample_df = pd.DataFrame(raveled_data.reshape(1,-1),columns=columns ,index=[sample_name])	
+	return single_sample_df
+
+def parse_raw_data(repeat_df, sample_name, norm='z'):
 
 	# check to make sure input is a dataframe
 	assert type(repeat_df) is pd.core.frame.DataFrame, "Invalid input, must be a pandas dataframe object"
@@ -26,20 +47,13 @@ def parse_raw_data(repeat_df, sample_name):
 
 	assert repeat_df.columns[0] == 'Repeat_Length', "Repeat dataframe is missing an expected column, Repeat_Length"
 
-	# z-score transform the dataframe on the sample itself, not on a collection of samples
-	# so there is no chance for overfitting.
-	mu = repeat_df.mean(axis=0)
-	std = repeat_df.std(axis=0)
-	df_data = (repeat_df.iloc[:, 1:] - mu) / std # ignore repeat_length column
-	df_data.fillna(0, inplace=True)
-
-	# turn this into a single sample and add the proper feature names
-	raveled_data = df_data.T.values.ravel()
-	#print(df_data)
-	columns = np.tile(repeat_df['Repeat_Length']+'_',df_data.shape[1]) + np.repeat(df_data.columns,df_data.shape[0])
-	single_sample_df = pd.DataFrame(raveled_data.reshape(1,-1),columns=columns ,index=[sample_name])
-	
-	return single_sample_df
+	# choose a normalization scheme
+	if norm == 'z':
+		single_sample_df = normalizeZscore(repeat_df, sample_name)
+		return single_sample_df
+	elif norm == 'std_u':
+		single_sample_df = feature_mean_std(repeat_df, sample_name)
+		return single_sample_df
 	# save the df
 	# final_output = '/'.join(path.split('/')[:-1])+'/zscore_normalized_{}.csv'.format(sample_name)
 	# marker_design_matrix.to_csv(final_output)
