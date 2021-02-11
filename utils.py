@@ -6,7 +6,7 @@ import numpy as np
 def repeat_finder(s):
     #Taken from https://stackoverflow.com/questions/9079797/detect-repetitions-in-string
     r = re.compile(r"(.+?)\1+")
-    for match in r.finditer(s):
+    for match in r.finditer(s, overlapped=True):
         yield (match.group(1), len(match.group(0))/len(match.group(1)))
 
 
