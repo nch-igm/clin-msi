@@ -107,6 +107,9 @@ def train():
     print(final_df['y'])
     final_df.to_csv('training_final_df.csv', index=False)
 
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+
     pickle_files = train_models(final_df, args.output_dir)
     print(pickle_files)
 
