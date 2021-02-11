@@ -1,2 +1,0 @@
-/Users/pjb004/Projects/msi_software/msi_sensor_test/docker/normal_bams/output/BAMs/20-0025_KY1016N.Recalibrated.bam 0
-/Users/pjb004/Projects/optec_pipeline/BAMs/Exp5A_G2_1047_tumor_tissue.Recalibrated.bam 1
