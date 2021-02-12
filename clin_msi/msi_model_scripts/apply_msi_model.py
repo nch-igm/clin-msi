@@ -9,7 +9,6 @@ import pandas as pd
 import matplotlib
 import numpy as np
 import random
-import imp
 import sys
 import pickle
 import matplotlib.patches as mpatches
@@ -18,7 +17,6 @@ import matplotlib.patches as mpatches
 from matplotlib.cm import ScalarMappable
 import math  
 import string
-import f
 import shap
 import matplotlib.pyplot as plt
 pd.set_option("display.max_rows", 100)
@@ -41,7 +39,19 @@ else:
 # In[ ]:
 
 
-
+def grab_feats(df):
+    curfeats=[x for x in df if x[:2] in ['N_','N-','N+']]
+    return(curfeats)
+def grab_marker_dict(df):
+    split_col_set=[y for y in [x.split("_") for x in df.columns] if len(y)>1]
+    coords=list(set([y[1] for y in split_col_set if ':' in y[1] and '-' in y[1]]))
+    marker_dict={x:[y[0] for y in split_col_set if y[1]==x] for x in coords}
+    return(marker_dict)
+def grab_marker_int(x):
+    if ('-' not in x and '+' not in x):
+        return(0)
+    else:
+        return(int(x[1:]))
 
 
 # In[ ]:
@@ -54,14 +64,16 @@ else:
 
 
 ### MODEL - TEST
-imp.reload(f)
 shapdict={}
 nrun=500
 ## DF ..combdat is 49, comb is 30
 #df=pd.read_csv(infile)
 df=pd.read_csv(infile).head(1)
-
-incols=f.grab_feats(df)
+sampcol='SAMPLE_NAME'
+if sampcol not in df:
+    df[sampcol]=['SAMPLE_' + str(i+1) for i in range(len(df))]
+df=df.rename(columns={sampcol:'samp'})
+incols=grab_feats(df)
 for j in range(nrun):
     if (j % 50) ==0 :
         xx=1
@@ -86,7 +98,6 @@ df['MSI_prediction']=df['ypred'].apply(lambda x: 'MSI' if x==1 else 'MSS')
 
 
 # EXPORT 
-df=df.rename(columns={df.columns[0]:'samp'})
 df['y']=df['yprob'].apply(lambda x: 0 if x<.5 else 1)
 df[['samp','yprob']].to_csv(outfile,index=False)
 
@@ -108,23 +119,24 @@ for x in incols:
     temp=shapdat[['shap_'+x+'_'+str(y+1) for y in range(nrun)]]
     hf['shap_'+x+'_mean']=temp.mean(axis=1)
     hf['shap_'+x+'_std']=temp.std(axis=1)
-markers=[x[2:] for x in hf.columns if x[:2]=='0_']
+marker_dict=grab_marker_dict(hf)
 bounddict={}
-bounddict[0]=[0,10]
-bounddict[1]=[10,20]
-bounddict[2]=[20,30]
+bounddict[0]=[-10,0]
+bounddict[1]=[0,10]
 for ibin in bounddict.keys():
     sumset=range(bounddict[ibin][0],bounddict[ibin][1])
-    for marker in markers:
-        hf['binnedshap_'+str(ibin)+'_'+marker+'_mean']=hf[['shap_'+str(x)+'_'+marker+'_mean' for x in sumset]].mean(axis=1)
-        hf['binnedshap_'+str(ibin)+'_'+marker+'_std']=hf[['shap_'+str(x)+'_'+marker+'_mean' for x in sumset]].std(axis=1)
-        hf['binnedval_'+str(ibin)+'_'+marker+'_mean']=hf[[str(x)+'_'+marker for x in sumset]].mean(axis=1)
-        hf['binnedval_'+str(ibin)+'_'+marker+'_std']=hf[[str(x)+'_'+marker for x in sumset]].std(axis=1)
+    for marker in marker_dict:
+        marker_strings=[x for x in marker_dict[marker] if grab_marker_int(x) in sumset]
+        hf['binnedshap_'+str(ibin)+'_'+marker+'_mean']=hf[['shap_'+x+'_'+marker+'_mean' for x in marker_strings]].mean(axis=1)
+        hf['binnedshap_'+str(ibin)+'_'+marker+'_std']=hf[['shap_'+x+'_'+marker+'_mean' for x in marker_strings]].std(axis=1)
+        hf['binnedval_'+str(ibin)+'_'+marker+'_mean']=hf[[x+'_'+marker for x in marker_strings]].mean(axis=1)
+        hf['binnedval_'+str(ibin)+'_'+marker+'_std']=hf[[x+'_'+marker for x in marker_strings]].std(axis=1)
 bmdict={}
 for i in hf.index:
+    print(i)
     currec=hf.loc[i]
     mdict={}
-    for marker in markers:
+    for marker in marker_dict:
         for ibin in bounddict.keys():
             bindesc=str(bounddict[ibin][0])+'...'+str(bounddict[ibin][1])
             keydesc=marker+"_"+bindesc
@@ -134,7 +146,6 @@ for i in hf.index:
                     locdict[dattype+'_'+stat]=currec['binned'+dattype+'_'+str(ibin)+'_'+marker+'_'+stat]
             mdict[keydesc]=locdict
     bmdict[i]=mdict
-
 
 # In[ ]:
 
@@ -146,7 +157,6 @@ for i in hf.index:
 
 
 ## PLOT
-imp.reload(f)
 testdat=hf
 cv=0
 for i in testdat.index:
@@ -159,7 +169,8 @@ for i in testdat.index:
     #sdat['val_mean_norm']=sdat['val_mean'].apply(lambda x: min(x,1))
     sdat['val_mean_discrete']=sdat['val_mean'].apply(lambda x: -1 if x <= 0 else 0 if x<=3 else 1)
     sdat['color']=sdat['val_mean_discrete'].apply(lambda x: 'green' if x==-1 else 'orange' if x==0 else 'red')
-    sdat=sdat[sdat.shapabs > 0.005]
+    if ((sdat.shapabs>0.005).mean() > 0):
+        sdat=sdat[sdat.shapabs > 0.005]
     colguide=sdat.val_mean_discrete
     #sdat=sdat[sdat.val_mean < 2]
     tempdict={};tempdict[0]='MSS';tempdict[1]='MSI'
@@ -175,7 +186,7 @@ for i in testdat.index:
     sm.set_array([])
     cbar = plt.colorbar(sm)
     cbar.set_label('Normalized read-count score', rotation=270,labelpad=25)
-    plt.title('; '.join([currec.samp,tempdict[currec.y], 'msi_conflevel='+str(round(currec.yprob,3))]))
+    plt.title('; '.join([currec.samp,'msi_conflevel='+str(round(currec.yprob,3))]))
     plt.savefig(plotfile,bbox_inches='tight')
 
 
