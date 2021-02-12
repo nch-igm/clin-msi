@@ -4,17 +4,17 @@ Source code for MSI Detection in tumor samples.
 
 ## Installation
 
-Install as python package
+### pip
 
-~~~~bash
-python -m venv .venv
-source .venv/bin/activate
-pip install .
-~~~~
+```bash
+pip install clin-msi
+```
 
-Install using Bioconda
+### conda from Bioconda channel
 
-    conda install -c bioconda clin-msi
+```bash
+conda install -c bioconda clin-msi
+```
 
 ## How to use clin-msi?
 ### Usage:
@@ -30,3 +30,21 @@ Install using Bioconda
 
 
     Predict the MSI status of a BAM by comparing it to your trained model
+
+
+# Development
+
+The package is managed using 
+
+## Install Poetry
+
+```bash
+curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+source $HOME/.poetry/env
+```
+
+## Install projects dependencies
+
+```bash
+poetry install -v
+```
