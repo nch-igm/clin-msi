@@ -48,9 +48,3 @@ source $HOME/.poetry/env
 ```bash
 poetry install -v
 ```
-
-## Build locally
-
-```bash
-poetry build
-```
