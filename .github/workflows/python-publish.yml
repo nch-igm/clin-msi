@@ -21,7 +21,7 @@ jobs:
       run: |
         curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
         source $HOME/.poetry/env
-        poetry install -v
+        pip install poetry-dynamic-versioning
     - name: Build and publish
       run: |
         poetry publish -u ${{ secrets.PYPI_USERNAME }} -p ${{ secrets.PYPI_PASSWORD }}
