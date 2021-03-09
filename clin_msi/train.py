@@ -1,10 +1,12 @@
-import pysam
 import os
 import argparse
-import regex as re
 from operator import itemgetter
 from collections import defaultdict
+
+import pysam
+import regex as re
 import pandas as pd
+
 from msiPlotter.parseRaw import parse_raw_data
 from shapPlotter.MSI_module_training_function_020521 import train_models
 
