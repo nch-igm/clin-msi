@@ -1,19 +1,21 @@
 import pysam
 import argparse
+import os
 import re
 from operator import itemgetter
 from collections import defaultdict
 import pandas as pd
-from msiPlotter.parseRaw import parse_raw_data
+from count_normalization.normalize_counts import parse_raw_data
+from msi_model_scripts.apply_msi_model import apply_msi_model
 
 def clin_msi_argparser():
     parser = argparse.ArgumentParser(description="")
-    parser.add_argument('--input-file', type=str, required=True, help="path to the tab separated input file")
+    parser.add_argument('--input-file', type=str, required=True, help="path to the tab separated input file with MSI regions")
     parser.add_argument('--bam', type=str, required=True, help="path to BAM file")
     parser.add_argument('--reference', type=str, required=True, help="path to reference(.fa or .fasta) file with index (.fai) in the same directory")
     parser.add_argument('--sample-name', type=str, required=True)
     parser.add_argument('--output-dir', type=str, required=True, help="")
-    #parser.add_argument('--model-dir', type=str, required=True, help="path to directory containing .pkl files")
+    parser.add_argument('--model-dir', type=str, required=True, help="path to directory containing .pkl files")
     parser.add_argument('--allow-mismatch', action='store_true', help="allows a single base mismatch within the repeat region")
 
     return parser
@@ -33,7 +35,7 @@ def parse_input_file(input_file):
 
     return location_list
 
-def count_repeats():
+def predict():
     parser = clin_msi_argparser()
     args = parser.parse_args()
 
@@ -65,8 +67,6 @@ def count_repeats():
             if read.reference_start > start:
                 continue
 
-            #difference = start - read.reference_start
-
             read_wo_softclip = read.query_sequence[read.query_alignment_start:read.query_alignment_end]
 
             #allow one mismatched base in repeat region if specified
@@ -94,8 +94,11 @@ def count_repeats():
         df.to_csv('test_raw_count.csv', index=False)
         normalized_df = parse_raw_data(df, args.sample_name)
 
-
     normalized_df.to_csv('test_normalized.csv', index=False)
 
+    #apply model to normalized msi counts
+    final_results_file = os.path.join(args.output_dir, args.sample_name + '_MSIscore.txt')
+    apply_msi_model(normalized_df, final_results_file)
+
 if __name__ == '__main__':
-    count_repeats()
+    predict()

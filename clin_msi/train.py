@@ -7,8 +7,8 @@ import pysam
 import regex as re
 import pandas as pd
 
-from msiPlotter.parseRaw import parse_raw_data
-from shapPlotter.MSI_module_training_function_020521 import train_models
+from count_normalization.normalize_counts import parse_raw_data
+from msi_model_scripts.msi_training import train_models
 
 def clin_msi_argparser():
     parser = argparse.ArgumentParser(description="")
@@ -43,7 +43,7 @@ def train():
     msi_location_list = parse_input_file(args.input_file)
 
     bam_file_df = pd.read_csv(args.input_bam_list, sep='\s+', names=['bam_path', 'msi_status'])
-    #print(bam_file_df)
+
     for index, row in bam_file_df.iterrows():
         #Load BAM file
         bam_file = pysam.AlignmentFile(row['bam_path'], "rb")
@@ -57,8 +57,6 @@ def train():
             largest_rep_unit = max(rep_list, key=itemgetter(1))[0]
             largest_rep_len = int(max(rep_list, key=itemgetter(1))[1])
             get_flanks = re.search(fr"(\w{{5}})(?:{largest_rep_unit}){{{largest_rep_len}}}(\w{{5}})", fasta_seq)
-            #print(get_flanks)
-            #print(rep_list, fasta_seq, largest_rep_unit, largest_rep_len)
             left_flank = get_flanks.group(1)
             right_flank = get_flanks.group(2)
 
@@ -72,8 +70,6 @@ def train():
                     continue
                 if read.reference_start > start:
                     continue
-
-                #difference = start - read.reference_start
 
                 read_wo_softclip = read.query_sequence[read.query_alignment_start:read.query_alignment_end]
 
@@ -103,10 +99,8 @@ def train():
         normalized_df = parse_raw_data(df, os.path.basename(row['bam_path']))
         final_df = final_df.append(normalized_df)
 
-    print(bam_file_df['msi_status'])
     new_col_list = bam_file_df['msi_status'].tolist()
     final_df['y'] = new_col_list
-    print(final_df['y'])
     final_df.to_csv('training_final_df.csv', index=False)
 
     if not os.path.exists(args.output_dir):
