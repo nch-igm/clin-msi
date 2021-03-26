@@ -1,6 +1,5 @@
-import os
-
 from aws_cdk import core
+from aws_cdk import aws_s3 as s3
 from aws_cdk import aws_iam as iam
 from aws_cdk import aws_codebuild as cb
 from aws_cdk import aws_codepipeline as cp
@@ -10,19 +9,7 @@ from aws_cdk import aws_codepipeline_actions as actions
 class ClinMsiCodePipeline(core.Construct):
     """Defines a CodePipeline: GitHub -> CodeBuild (PyTest) -> Manual Approval -> CodeBuild (Deploys to PyPI)"""
 
-    @property
-    def pytest_project(self):
-        return self._pytest_project
-    
-    @property
-    def publish_project(self):
-        return self._publish_project
-
-    @property
-    def code_pipeline(self):
-        return self._pipeline
-
-    def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
+    def __init__(self, scope: core.Construct, id: str, *, artifact_bucket_name: str, **kwargs) -> None:
         """Define the resources for the CodePipeline.
         
         :param scope: the parent construct
@@ -31,8 +18,9 @@ class ClinMsiCodePipeline(core.Construct):
         """
         super().__init__(scope, id, **kwargs)
 
-        account_id = core.Stack.of(self).account
-        env = core.Stack.of(self).environment
+        stack = core.Stack.of(self)
+        account_id = stack.account
+        region = stack.region
 
         repo_name = 'clin-msi'
 
@@ -51,8 +39,8 @@ class ClinMsiCodePipeline(core.Construct):
                 effect=iam.Effect.ALLOW,
                 actions=["ssm:GetParameters"],
                 resources=[
-                    f"arn:aws:ssm:{env}:{account_id}:parameter/ClinMsi/PyPI/Credentials/Username",
-                    f"arn:aws:ssm:{env}:{account_id}:parameter/ClinMsi/PyPI/Credentials/Password"
+                    f"arn:aws:ssm:{region}:{account_id}:parameter/ClinMsi/PyPI/Credentials/Username",
+                    f"arn:aws:ssm:{region}:{account_id}:parameter/ClinMsi/PyPI/Credentials/Password"
                 ]
             ))
 
@@ -60,7 +48,7 @@ class ClinMsiCodePipeline(core.Construct):
         source_output = cp.Artifact()
         source_action = actions.BitBucketSourceAction(
             action_name='GitHub',
-            connection_arn=f"arn:aws:codestar-connections:{env}:{account_id}:connection/a859d7f0-0bf3-48f5-bce1-492c9bc08bef",
+            connection_arn=f"arn:aws:codestar-connections:{region}:{account_id}:connection/a859d7f0-0bf3-48f5-bce1-492c9bc08bef",
             output=source_output,
             code_build_clone_output=True,
             owner="nch-igm",
@@ -72,7 +60,11 @@ class ClinMsiCodePipeline(core.Construct):
         manual_approval = actions.ManualApprovalAction(action_name='ApproveToPublish')
 
         # initialize pipeline
-        self._pipeline = cp.Pipeline(self, 'CodePipeline', pipeline_name=repo_name)
+        self._artifact_bucket = s3.Bucket.from_bucket_name(self, 'Bucket', artifact_bucket_name)
+        self._pipeline = cp.Pipeline(
+            self, 'CodePipeline',
+            pipeline_name=repo_name,
+            artifact_bucket=self._artifact_bucket)
         self._pipeline.add_to_role_policy(
             iam.PolicyStatement(
                 effect=iam.Effect.ALLOW,
@@ -86,6 +78,22 @@ class ClinMsiCodePipeline(core.Construct):
         self._pipeline.add_stage(stage_name="UnitTest", actions=[unittest_action])
         self._pipeline.add_stage(stage_name="ManualApprovalForPublish", actions=[manual_approval])
         self._pipeline.add_stage(stage_name="Publish", actions=[publish_action])
+
+    @property
+    def pytest_project(self):
+        return self._pytest_project
+    
+    @property
+    def publish_project(self):
+        return self._publish_project
+
+    @property
+    def code_pipeline(self):
+        return self._pipeline
+
+    @property
+    def artifact_bucket(self):
+        return self._artifact_bucket
 
     
 buildspec_pytest = {
