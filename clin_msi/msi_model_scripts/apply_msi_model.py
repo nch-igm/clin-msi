@@ -125,7 +125,7 @@ def build_n_save_shap_plot(currec,mdict,shap_plot_file):
 
 ## MAIN RUNNER
 def apply_model(infile,modfiles,outfile,shap_plot_dir):
-    df=pd.read_csv(infile).head(10)
+    df=pd.read_csv(infile)
     sampcol='SAMPLE_NAME'
     if sampcol not in df:
         df[sampcol]=['SAMPLE_' + str(i+1) for i in range(len(df))]
