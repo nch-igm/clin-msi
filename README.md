@@ -2,6 +2,9 @@
 
 Source code for MSI Detection in tumor samples.
 
+[![PyPI version](https://badge.fury.io/py/clin-msi.svg)](https://badge.fury.io/py/clin-msi)
+![Build Status](https://fljy3qhm3i.execute-api.us-east-2.amazonaws.com/prod/?projectName=clin-msi-unittest)
+
 ## Installation
 
 ### pip
