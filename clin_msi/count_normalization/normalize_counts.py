@@ -38,7 +38,7 @@ def normalizeZscore(repeat_df, sample_name):
 	single_sample_df = pd.DataFrame(raveled_data.reshape(1,-1),columns=columns ,index=[sample_name])	
 	return single_sample_df
 
-def parse_raw_data(repeat_df, sample_name, norm='z'):
+def parse_raw_data(repeat_df, sample_name, norm_scheme):
 
 	# check to make sure input is a dataframe
 	assert type(repeat_df) is pd.core.frame.DataFrame, "Invalid input, must be a pandas dataframe object"
@@ -48,10 +48,10 @@ def parse_raw_data(repeat_df, sample_name, norm='z'):
 	assert repeat_df.columns[0] == 'Repeat_Length', "Repeat dataframe is missing an expected column, Repeat_Length"
 
 	# choose a normalization scheme
-	if norm == 'z':
+	if norm_scheme == 'z':
 		single_sample_df = normalizeZscore(repeat_df, sample_name)
 		return single_sample_df
-	elif norm == 'std_u':
+	elif norm_scheme == 'std_u':
 		single_sample_df = feature_mean_std(repeat_df, sample_name)
 		return single_sample_df
 	# save the df
