@@ -17,6 +17,7 @@ def clin_msi_argparser():
     parser.add_argument('--reference', type=str, required=True, help="path to reference(.fa or .fasta) file with index (.fai) in the same directory")
     parser.add_argument('--output-dir', type=str, required=True, help="")
     parser.add_argument('--allow-mismatch', action='store_true', help="allows a single base mismatch within the repeat region")
+    parser.add_argument('--normalization-scheme', type=str, required=True, choices=['z','std_u'], help="")
 
     return parser
 

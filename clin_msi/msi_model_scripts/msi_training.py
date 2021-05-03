@@ -1,24 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[12]:
-
-
 ## IMPORT
 import pandas as pd
 import numpy as np
 import pickle
 import xgboost as xgb
-
-
-# In[ ]:
-
-
-
-
-
-# In[56]:
-
 
 ## FUNCTIONS
 ## INTERNAL TRAINING FUNCTION
@@ -50,64 +37,3 @@ def train_models(df,moddir):
         pickle.dump(mymod, pkl_connect)
         pkl_connect.close()
     return(modfiles)
-
-
-# In[ ]:
-
-
-
-
-
-# In[57]:
-
-
-## EXE
-
-#infile='/igm/home/jbg001/git/msi/dat/sample_patricks_msi_df.csv'
-#rawdat=pd.read_csv(infile)
-#moddir_temp='/igm/home/jbg001/git/msi/tm/temp_mods_020521'
-#modfiles=train_models(rawdat,moddir_temp)
-
-
-# In[ ]:
-
-
-
-
-
-# In[59]:
-
-
-## OUTPUT
-#modfiles[:5]
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
