@@ -12,6 +12,7 @@ import glob
 from matplotlib.cm import ScalarMappable
 import math  
 import shap
+import os
 pd.options.mode.chained_assignment = None  # default='warn'
 
 ## AUX FUNCS
