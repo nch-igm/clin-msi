@@ -95,11 +95,11 @@ def predict():
         df.to_csv('test_raw_count.csv', index=False)
         normalized_df = parse_raw_data(df, args.sample_name, args.normalization_scheme)
 
-    normalized_df.to_csv(os.path.join(args.sample_name + '_normalized.csv'), index=False)
+    normalized_df.to_csv(os.path.join(args.output_dir, args.sample_name + '_normalized.csv'), index=False)
 
     #apply model to normalized msi counts
     final_results_file = os.path.join(args.output_dir, args.sample_name + '_MSIscore.txt')
-    apply_model(os.path.join(args.sample_name + '_normalized.csv'), args.model_dir, final_results_file)
+    apply_model(os.path.join(args.output_dir, args.sample_name + '_normalized.csv'), args.model_dir, final_results_file)
 
 if __name__ == '__main__':
     predict()
