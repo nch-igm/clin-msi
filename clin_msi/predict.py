@@ -1,7 +1,7 @@
 import pysam
 import argparse
 import os
-import re
+import regex as re
 from operator import itemgetter
 from collections import defaultdict
 import pandas as pd
