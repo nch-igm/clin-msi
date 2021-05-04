@@ -124,7 +124,7 @@ def build_n_save_shap_plot(currec,mdict,shap_plot_file):
 
 
 ## MAIN RUNNER
-def apply_model(infile,modfiles,outfile,shap_plot_dir):
+def apply_model(infile,modfiles,outfile,shap_plot_dir=None):
     df=pd.read_csv(infile)
     sampcol='SAMPLE_NAME'
     if sampcol not in df:
@@ -132,11 +132,11 @@ def apply_model(infile,modfiles,outfile,shap_plot_dir):
     df=df.rename(columns={sampcol:'samp'})
     dfnew,shapdict,curfeats=apply_mod_to_dataframe(df,modfiles)
     dfnew[['samp','yprob']].to_csv(outfile,index=False)
-    ## GRAB  SHAP DATA
-    testdat,bmdict=grab_shap_data(dfnew,shapdict,curfeats)
-    ## EXPORT SHAP PLOTS
-    for i in range(len(testdat)):
-        shap_outfile=shap_plot_dir+"/shap_plot_"+str(i+1)+'.png'
-        shaprec=testdat.iloc[i]
-        shapdict_loc=bmdict[i]
-        build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)
+    # ## GRAB  SHAP DATA
+    # testdat,bmdict=grab_shap_data(dfnew,shapdict,curfeats)
+    # ## EXPORT SHAP PLOTS
+    # for i in range(len(testdat)):
+    #     shap_outfile=shap_plot_dir+"/shap_plot_"+str(i+1)+'.png'
+    #     shaprec=testdat.iloc[i]
+    #     shapdict_loc=bmdict[i]
+    #     build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)

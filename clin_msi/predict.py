@@ -99,7 +99,7 @@ def predict():
 
     #apply model to normalized msi counts
     final_results_file = os.path.join(args.output_dir, args.sample_name + '_MSIscore.txt')
-    apply_model(normalized_df, final_results_file)
+    apply_model(normalized_df, args.model_dir, final_results_file)
 
 if __name__ == '__main__':
     predict()
