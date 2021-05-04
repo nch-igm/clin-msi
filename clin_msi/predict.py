@@ -6,7 +6,7 @@ from operator import itemgetter
 from collections import defaultdict
 import pandas as pd
 from count_normalization.normalize_counts import parse_raw_data
-from msi_model_scripts.apply_msi_model import apply_msi_model
+from msi_model_scripts.apply_msi_model import apply_model
 
 def clin_msi_argparser():
     parser = argparse.ArgumentParser(description="")
@@ -98,7 +98,7 @@ def predict():
 
     #apply model to normalized msi counts
     final_results_file = os.path.join(args.output_dir, args.sample_name + '_MSIscore.txt')
-    apply_msi_model(normalized_df, final_results_file)
+    apply_model(normalized_df, final_results_file)
 
 if __name__ == '__main__':
     predict()
