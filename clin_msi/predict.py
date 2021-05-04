@@ -17,6 +17,7 @@ def clin_msi_argparser():
     parser.add_argument('--output-dir', type=str, required=True, help="")
     parser.add_argument('--model-dir', type=str, required=True, help="path to directory containing .pkl files")
     parser.add_argument('--allow-mismatch', action='store_true', help="allows a single base mismatch within the repeat region")
+    parser.add_argument('--normalization-scheme', type=str, required=True, choices=['z', 'std_u'], help="")
 
     return parser
 
@@ -92,7 +93,7 @@ def predict():
         df['Repeat_Length'] = length_list
         df[f'{chr}:{start}-{stop}'] = repeat_count_list
         df.to_csv('test_raw_count.csv', index=False)
-        normalized_df = parse_raw_data(df, args.sample_name)
+        normalized_df = parse_raw_data(df, args.sample_name, args.normalization_scheme)
 
     normalized_df.to_csv('test_normalized.csv', index=False)
 
