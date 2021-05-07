@@ -19,11 +19,18 @@ import numpy as np
 
 
 def feature_mean_std(repeat_df, sample_name):
-	std = repeat_df.std(axis=0)
-	u = repeat_df.mean(axis=0)
-	std.index = std.index + '_std'
-	u.index = u.index + '_u'
-	single_sample_df = pd.DataFrame(pd.concat([u, std]).T,columns=[sample_name]).T
+	repeat_df.index = pd.to_numeric(repeat_df.index.str.replace('N', '')).fillna(0).astype(int)
+	n_col = []
+	n_data = []
+	for c in repeat_df.columns:
+		data = []
+		for idx, item in df[c].iteritems():
+			data += [idx]*item
+		n_data.append(np.mean(data))
+		n_data.append(np.std(data))
+		n_col.append(c+'_u')
+		n_col.append(c+'_std')
+	single_sample_df = pd.DataFrame(data=np.asarray(n_data).reshape(1,-1), columns=n_col, index=[sample_name])
 	return single_sample_df
 
 def normalizeZscore(repeat_df, sample_name):
