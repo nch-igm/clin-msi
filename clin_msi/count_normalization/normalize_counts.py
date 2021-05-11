@@ -22,6 +22,7 @@ def feature_mean_std(repeat_df, sample_name):
 	repeat_df.index = pd.to_numeric(repeat_df['Repeat_Length'].str.replace('N', '')).fillna(0).astype(int)
 	n_col = []
 	n_data = []
+	del repeat_df['Repeat_Length']
 	for c in repeat_df.columns:
 		data = []
 		for idx, item in repeat_df[c].iteritems():
