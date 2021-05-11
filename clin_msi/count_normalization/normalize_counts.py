@@ -26,8 +26,8 @@ def feature_mean_std(repeat_df, sample_name):
 	for c in repeat_df.columns:
 		data = []
 		for idx, item in repeat_df[c].iteritems():
-			print(idx, type(idx))
-			print(item, type(item))
+			#print(idx, type(idx))
+			#print(item, type(item))
 			data += [idx]*int(item)
 		n_data.append(np.mean(data))
 		n_data.append(np.std(data))
