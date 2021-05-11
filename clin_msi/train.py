@@ -97,7 +97,6 @@ def train():
             df['Repeat_Length'] = length_list
             df[f'{chr}:{start}-{stop}'] = repeat_count_list
 
-        df.set_index('Repeat_Length', inplace=True)
         normalized_df = parse_raw_data(df, os.path.basename(row['bam_path']), args.normalization_scheme)
         final_df = final_df.append(normalized_df)
 
