@@ -92,8 +92,8 @@ def predict():
 
         df['Repeat_Length'] = length_list
         df[f'{chr}:{start}-{stop}'] = repeat_count_list
-        df.to_csv('test_raw_count.csv', index=False)
-        normalized_df = parse_raw_data(df, args.sample_name, args.normalization_scheme)
+    df.to_csv('test_raw_count.csv', index=False)
+    normalized_df = parse_raw_data(df, args.sample_name, args.normalization_scheme)
 
     normalized_df.to_csv(os.path.join(args.output_dir, args.sample_name + '_normalized.csv'), index=False)
 
