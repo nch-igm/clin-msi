@@ -8,10 +8,11 @@ import numpy as np
 import pickle
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-
+import glob
 from matplotlib.cm import ScalarMappable
 import math  
 import shap
+import os
 pd.options.mode.chained_assignment = None  # default='warn'
 
 ## AUX FUNCS
@@ -25,12 +26,13 @@ def grab_marker_int(x):
         return(0)
     else:
         return(int(x[1:]))
-def apply_mod_to_dataframe(df,modfiles):
+def apply_mod_to_dataframe(df,moddir):
     shapdict={}
     nrun=500
     ## DF ..combdat is 49, comb is 30
     #df=pd.read_csv(infile)
     j=0
+    modfiles = glob.glob(os.path.join(moddir, "*pkl"))
     for modfile in modfiles:
         if (j % 50) ==0 :
             xx=1
@@ -124,19 +126,19 @@ def build_n_save_shap_plot(currec,mdict,shap_plot_file):
 
 
 ## MAIN RUNNER
-def apply_model(infile,modfiles,outfile,shap_plot_dir):
+def apply_model(infile,moddir,outfile,shap_plot_dir=None):
     df=pd.read_csv(infile)
     sampcol='SAMPLE_NAME'
     if sampcol not in df:
         df[sampcol]=['SAMPLE_' + str(i+1) for i in range(len(df))]
     df=df.rename(columns={sampcol:'samp'})
-    dfnew,shapdict,curfeats=apply_mod_to_dataframe(df,modfiles)
+    dfnew,shapdict,curfeats=apply_mod_to_dataframe(df,moddir)
     dfnew[['samp','yprob']].to_csv(outfile,index=False)
-    ## GRAB  SHAP DATA
-    testdat,bmdict=grab_shap_data(dfnew,shapdict,curfeats)
-    ## EXPORT SHAP PLOTS
-    for i in range(len(testdat)):
-        shap_outfile=shap_plot_dir+"/shap_plot_"+str(i+1)+'.png'
-        shaprec=testdat.iloc[i]
-        shapdict_loc=bmdict[i]
-        build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)
+    # ## GRAB  SHAP DATA
+    # testdat,bmdict=grab_shap_data(dfnew,shapdict,curfeats)
+    # ## EXPORT SHAP PLOTS
+    # for i in range(len(testdat)):
+    #     shap_outfile=shap_plot_dir+"/shap_plot_"+str(i+1)+'.png'
+    #     shaprec=testdat.iloc[i]
+    #     shapdict_loc=bmdict[i]
+    #     build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)

@@ -1,12 +1,12 @@
 import pysam
 import argparse
 import os
-import re
+import regex as re
 from operator import itemgetter
 from collections import defaultdict
 import pandas as pd
 from count_normalization.normalize_counts import parse_raw_data
-from msi_model_scripts.apply_msi_model import apply_msi_model
+from msi_model_scripts.apply_msi_model import apply_model
 
 def clin_msi_argparser():
     parser = argparse.ArgumentParser(description="")
@@ -17,13 +17,14 @@ def clin_msi_argparser():
     parser.add_argument('--output-dir', type=str, required=True, help="")
     parser.add_argument('--model-dir', type=str, required=True, help="path to directory containing .pkl files")
     parser.add_argument('--allow-mismatch', action='store_true', help="allows a single base mismatch within the repeat region")
+    parser.add_argument('--normalization-scheme', type=str, required=True, choices=['z', 'std_u'], help="")
 
     return parser
 
 def repeat_finder(s):
     #Taken from https://stackoverflow.com/questions/9079797/detect-repetitions-in-string
     r = re.compile(r"(.+?)\1+")
-    for match in r.finditer(s):
+    for match in r.finditer(s, overlapped=True):
         yield (match.group(1), len(match.group(0))/len(match.group(1)))
 
 def parse_input_file(input_file):
@@ -52,7 +53,7 @@ def predict():
         rep_list = list(repeat_finder(fasta_seq))
         largest_rep_unit = max(rep_list, key=itemgetter(1))[0]
         largest_rep_len = int(max(rep_list, key=itemgetter(1))[1])
-        get_flanks = re.search(fr"(\w{{5}}){largest_rep_unit}{{{largest_rep_len}}}(\w{{5}})", fasta_seq)
+        get_flanks = re.search(fr"(\w{{5}})(?:{largest_rep_unit}){{{largest_rep_len}}}(\w{{5}})", fasta_seq)
         left_flank = get_flanks.group(1)
         right_flank = get_flanks.group(2)
 
@@ -91,14 +92,14 @@ def predict():
 
         df['Repeat_Length'] = length_list
         df[f'{chr}:{start}-{stop}'] = repeat_count_list
-        df.to_csv('test_raw_count.csv', index=False)
-        normalized_df = parse_raw_data(df, args.sample_name)
+    df.to_csv('test_raw_count.csv', index=False)
+    normalized_df = parse_raw_data(df, args.sample_name, args.normalization_scheme)
 
-    normalized_df.to_csv('test_normalized.csv', index=False)
+    normalized_df.to_csv(os.path.join(args.output_dir, args.sample_name + '_normalized.csv'), index=False)
 
     #apply model to normalized msi counts
     final_results_file = os.path.join(args.output_dir, args.sample_name + '_MSIscore.txt')
-    apply_msi_model(normalized_df, final_results_file)
+    apply_model(os.path.join(args.output_dir, args.sample_name + '_normalized.csv'), args.model_dir, final_results_file)
 
 if __name__ == '__main__':
     predict()
