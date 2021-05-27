@@ -3,7 +3,8 @@ import logging
 
 import xgboost as xgb
 
-
+## FUNCTIONS
+## INTERNAL TRAINING FUNCTION
 def modfit(df,curfeats):
     X=df[curfeats]
     Y=df['y']

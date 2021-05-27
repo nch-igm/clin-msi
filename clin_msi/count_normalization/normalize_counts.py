@@ -13,9 +13,9 @@ Should take < 1 minutes to run
 """
 
 import argparse
-import pandas as pd
-import numpy as np
 
+import numpy as np
+import pandas as pd
 
 
 def feature_mean_std(repeat_df, sample_name):
@@ -26,8 +26,8 @@ def feature_mean_std(repeat_df, sample_name):
 	for c in repeat_df.columns:
 		data = []
 		for idx, item in repeat_df[c].iteritems():
-			#print(idx, type(idx))
-			#print(item, type(item))
+			#logging.info(idx, type(idx))
+			#logging.info(item, type(item))
 			data += [idx]*int(item)
 		n_data.append(np.mean(data))
 		n_data.append(np.std(data))
@@ -36,6 +36,7 @@ def feature_mean_std(repeat_df, sample_name):
 	single_sample_df = pd.DataFrame(data=np.asarray(n_data).reshape(1,-1), columns=n_col, index=[sample_name])
 	return single_sample_df
 
+
 def normalizeZscore(repeat_df, sample_name):
 	mu = repeat_df.mean(axis=0)
 	std = repeat_df.std(axis=0)
@@ -43,10 +44,11 @@ def normalizeZscore(repeat_df, sample_name):
 	df_data.fillna(0, inplace=True)
 	# turn this into a single sample and add the proper feature names
 	raveled_data = df_data.T.values.ravel()
-	#print(df_data)
+	#logging.info(df_data)
 	columns = np.tile(repeat_df['Repeat_Length']+'_',df_data.shape[1]) + np.repeat(df_data.columns,df_data.shape[0])
 	single_sample_df = pd.DataFrame(raveled_data.reshape(1,-1),columns=columns ,index=[sample_name])	
 	return single_sample_df
+
 
 def parse_raw_data(repeat_df, sample_name, norm_scheme):
 
@@ -68,6 +70,7 @@ def parse_raw_data(repeat_df, sample_name, norm_scheme):
 	# final_output = '/'.join(path.split('/')[:-1])+'/zscore_normalized_{}.csv'.format(sample_name)
 	# marker_design_matrix.to_csv(final_output)
 
+
 def main():
 	parser = argparse.ArgumentParser(prog='Parse raw MSI data',description='Convert an excel file into a design matrix for machine learning with the markers zscore normalized by row')
 	parser.add_argument('repeat_df', type=pd.core.frame.DataFrame, nargs=1, help='pandas dataframe holding a single sample')
@@ -75,6 +78,7 @@ def main():
 	parser.add_argument('sample_name', metavar='XXXX', type=str, nargs=1, help='name of sample', default='test_sample')
 	args = parser.parse_args()
 	parse_raw_data(args.repeat_df, args.sample_name)
+
 
 if __name__ == '__main__':
     main()
