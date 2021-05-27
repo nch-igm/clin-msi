@@ -1,25 +1,15 @@
 import os
-import argparse
+import typing
+import regex as re
 from operator import itemgetter
 from collections import defaultdict
 
 import pysam
-import regex as re
 import pandas as pd
 
-from count_normalization.normalize_counts import parse_raw_data
-from msi_model_scripts.msi_training import train_models
+from .count_normalization.normalize_counts import parse_raw_data
+from .msi_model_scripts.msi_training import train_models
 
-def clin_msi_argparser():
-    parser = argparse.ArgumentParser(description="")
-    parser.add_argument('--input-file', type=str, required=True, help="path to the tab separated input file with MSI regions")
-    parser.add_argument('--input-bam-list', type=str, required=True, help="input file with BAM paths and MSI status")
-    parser.add_argument('--reference', type=str, required=True, help="path to reference(.fa or .fasta) file with index (.fai) in the same directory")
-    parser.add_argument('--output-dir', type=str, required=True, help="")
-    parser.add_argument('--allow-mismatch', action='store_true', help="allows a single base mismatch within the repeat region")
-    parser.add_argument('--normalization-scheme', type=str, required=True, choices=['z','std_u'], help="")
-
-    return parser
 
 def repeat_finder(s):
     #Taken from https://stackoverflow.com/questions/9079797/detect-repetitions-in-string
@@ -33,17 +23,22 @@ def parse_input_file(input_file):
     for line in open_file:
         chr, start, stop = line.split('\t')
         location_list.append([str(chr), int(start), int(stop)])
-
     return location_list
 
 
-def train():
-    parser = clin_msi_argparser()
-    args = parser.parse_args()
+def train(
+        input_file: str,
+        input_bam_list: typing.List[str],
+        reference: str,
+        allow_mismatch: bool,
+        normalization_scheme: str,
+        output_dir: str
+    ) -> None:
+    """Training workflow main function."""
     final_df = pd.DataFrame()
-    msi_location_list = parse_input_file(args.input_file)
+    msi_location_list = parse_input_file(input_file)
 
-    bam_file_df = pd.read_csv(args.input_bam_list, sep='\s+', names=['bam_path', 'msi_status'])
+    bam_file_df = pd.read_csv(input_bam_list, sep='\s+', names=['bam_path', 'msi_status'])
 
     for index, row in bam_file_df.iterrows():
         #Load BAM file
@@ -53,7 +48,7 @@ def train():
         for chr, start, stop in msi_location_list:
             #get expected repeat length from provided reference file
             length_dict = defaultdict(int)
-            fasta_seq = pysam.faidx(args.reference, f"{chr}:{start-10}-{stop+10}").split('\n')[1]
+            fasta_seq = pysam.faidx(reference, f"{chr}:{start-10}-{stop+10}").split('\n')[1]
             rep_list = list(repeat_finder(fasta_seq))
             largest_rep_unit = max(rep_list, key=itemgetter(1))[0]
             largest_rep_len = int(max(rep_list, key=itemgetter(1))[1])
@@ -75,7 +70,7 @@ def train():
                 read_wo_softclip = read.query_sequence[read.query_alignment_start:read.query_alignment_end]
 
                 #allow one mismatched base in repeat region if specified
-                if args.allow_mismatch:
+                if allow_mismatch:
                     get_rep = re.search(fr"{left_flank}({largest_rep_unit}+[ACTG]?{largest_rep_unit}+){right_flank}", read_wo_softclip)
                 else:
                     get_rep = re.search(fr"{left_flank}({largest_rep_unit}+){right_flank}", read_wo_softclip)
@@ -97,18 +92,19 @@ def train():
             df['Repeat_Length'] = length_list
             df[f'{chr}:{start}-{stop}'] = repeat_count_list
 
-        normalized_df = parse_raw_data(df, os.path.basename(row['bam_path']), args.normalization_scheme)
+        normalized_df = parse_raw_data(df, os.path.basename(row['bam_path']), normalization_scheme)
         final_df = final_df.append(normalized_df)
 
     new_col_list = bam_file_df['msi_status'].tolist()
     final_df['y'] = new_col_list
     final_df.to_csv('training_final_df.csv', index=False)
 
-    if not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    pickle_files = train_models(final_df, args.output_dir)
+    pickle_files = train_models(final_df, output_dir)
     print(pickle_files)
+
 
 if __name__ == '__main__':
     train()
