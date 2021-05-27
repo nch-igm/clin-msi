@@ -1,18 +1,14 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-## IMPORT
-import pandas as pd
-import matplotlib
-import numpy as np
-import pickle
-import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
-import glob
-from matplotlib.cm import ScalarMappable
-import math  
-import shap
 import os
+import math  
+import glob
+import pickle
+import logging
+
+import shap
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.cm import ScalarMappable
+
 pd.options.mode.chained_assignment = None  # default='warn'
 
 ## AUX FUNCS
@@ -36,7 +32,7 @@ def apply_mod_to_dataframe(df,moddir):
     for modfile in modfiles:
         if (j % 50) ==0 :
             xx=1
-            #print(j)
+            #logging.info(j)
         pkl_connect = open(modfile, 'rb')
         mymod=pickle.load(pkl_connect)
         pkl_connect.close()
@@ -78,7 +74,7 @@ def grab_shap_data(df,shapdict,incols):
             hf['binnedval_'+str(ibin)+'_'+marker+'_std']=hf[[x+'_'+marker for x in marker_strings]].std(axis=1)
     bmdict={}
     for i in hf.index:
-        print(i)
+        logging.info(i)
         currec=hf.loc[i]
         mdict={}
         for marker in marker_dict:
