@@ -5,8 +5,8 @@ import regex as re
 from operator import itemgetter
 from collections import defaultdict
 import pandas as pd
-from count_normalization.normalize_counts import parse_raw_data
-from msi_model_scripts.apply_msi_model import apply_model
+from .normalize_counts import parse_raw_data
+from .apply_msi_model import apply_model
 
 def clin_msi_argparser():
     parser = argparse.ArgumentParser(description="")

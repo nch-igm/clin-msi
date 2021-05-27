@@ -7,8 +7,8 @@ import pysam
 import regex as re
 import pandas as pd
 
-from count_normalization.normalize_counts import parse_raw_data
-from msi_model_scripts.msi_training import train_models
+from .normalize_counts import parse_raw_data
+from .msi_training import train_models
 
 def clin_msi_argparser():
     parser = argparse.ArgumentParser(description="")
