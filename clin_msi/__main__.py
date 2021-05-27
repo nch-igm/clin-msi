@@ -16,10 +16,8 @@ def comma_str_to_list(str_list):
     return str_list.split(",")
 
 
-if __name__ == "__main__":
-
+def main() -> None:
     logging.basicConfig(level=logging.INFO)
-    
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help='Workflow Type', dest="subparser_name")
 
@@ -63,3 +61,7 @@ if __name__ == "__main__":
             args.model_dir)
     else:
         raise ValueError(f"Invalid workflow type {args.subparser_name}.")
+
+
+if __name__ == "__main__":
+    main()
