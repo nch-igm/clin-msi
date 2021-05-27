@@ -1,25 +1,14 @@
-import pysam
-import argparse
 import os
 import regex as re
 from operator import itemgetter
 from collections import defaultdict
+
+import pysam
 import pandas as pd
-from count_normalization.normalize_counts import parse_raw_data
-from msi_model_scripts.apply_msi_model import apply_model
 
-def clin_msi_argparser():
-    parser = argparse.ArgumentParser(description="")
-    parser.add_argument('--input-file', type=str, required=True, help="path to the tab separated input file with MSI regions")
-    parser.add_argument('--bam', type=str, required=True, help="path to BAM file")
-    parser.add_argument('--reference', type=str, required=True, help="path to reference(.fa or .fasta) file with index (.fai) in the same directory")
-    parser.add_argument('--sample-name', type=str, required=True)
-    parser.add_argument('--output-dir', type=str, required=True, help="")
-    parser.add_argument('--model-dir', type=str, required=True, help="path to directory containing .pkl files")
-    parser.add_argument('--allow-mismatch', action='store_true', help="allows a single base mismatch within the repeat region")
-    parser.add_argument('--normalization-scheme', type=str, required=True, choices=['z', 'std_u'], help="")
+from .count_normalization.normalize_counts import parse_raw_data
+from .msi_model_scripts.apply_msi_model import apply_model
 
-    return parser
 
 def repeat_finder(s):
     #Taken from https://stackoverflow.com/questions/9079797/detect-repetitions-in-string
@@ -36,20 +25,28 @@ def parse_input_file(input_file):
 
     return location_list
 
-def predict():
-    parser = clin_msi_argparser()
-    args = parser.parse_args()
+def predict(
+        input_file: str,
+        bam: str,
+        reference: str,
+        allow_mismatch: bool,
+        sample_name: str,
+        normalization_scheme: str,
+        output_dir: str,
+        model_dir: str
+    ) -> None:
+    """Prediction workflow main function."""
 
-    msi_location_list = parse_input_file(args.input_file)
+    msi_location_list = parse_input_file(input_file)
 
     #Load BAM file
-    bam_file = pysam.AlignmentFile(args.bam, "rb")
+    bam_file = pysam.AlignmentFile(bam, "rb")
     df = pd.DataFrame()
 
     for chr, start, stop in msi_location_list:
         #get expected repeat length from provided reference file
         length_dict = defaultdict(int)
-        fasta_seq = pysam.faidx(args.reference, f"{chr}:{start-10}-{stop+10}").split('\n')[1]
+        fasta_seq = pysam.faidx(reference, f"{chr}:{start-10}-{stop+10}").split('\n')[1]
         rep_list = list(repeat_finder(fasta_seq))
         largest_rep_unit = max(rep_list, key=itemgetter(1))[0]
         largest_rep_len = int(max(rep_list, key=itemgetter(1))[1])
@@ -71,7 +68,7 @@ def predict():
             read_wo_softclip = read.query_sequence[read.query_alignment_start:read.query_alignment_end]
 
             #allow one mismatched base in repeat region if specified
-            if args.allow_mismatch:
+            if allow_mismatch:
                 get_rep = re.search(fr"{left_flank}({largest_rep_unit}+[ACTG]?{largest_rep_unit}+){right_flank}", read_wo_softclip)
             else:
                 get_rep = re.search(fr"{left_flank}({largest_rep_unit}+){right_flank}", read_wo_softclip)
@@ -93,13 +90,13 @@ def predict():
         df['Repeat_Length'] = length_list
         df[f'{chr}:{start}-{stop}'] = repeat_count_list
     df.to_csv('test_raw_count.csv', index=False)
-    normalized_df = parse_raw_data(df, args.sample_name, args.normalization_scheme)
+    normalized_df = parse_raw_data(df, sample_name, normalization_scheme)
 
-    normalized_df.to_csv(os.path.join(args.output_dir, args.sample_name + '_normalized.csv'), index=False)
+    normalized_df.to_csv(os.path.join(output_dir, sample_name + '_normalized.csv'), index=False)
 
     #apply model to normalized msi counts
-    final_results_file = os.path.join(args.output_dir, args.sample_name + '_MSIscore.txt')
-    apply_model(os.path.join(args.output_dir, args.sample_name + '_normalized.csv'), args.model_dir, final_results_file)
+    final_results_file = os.path.join(output_dir, sample_name + '_MSIscore.txt')
+    apply_model(os.path.join(output_dir, sample_name + '_normalized.csv'), model_dir, final_results_file)
 
 if __name__ == '__main__':
     predict()
