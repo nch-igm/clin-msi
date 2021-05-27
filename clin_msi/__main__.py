@@ -1,4 +1,5 @@
 import os
+import logging
 import argparse
 
 from .train import train
@@ -16,6 +17,9 @@ def comma_str_to_list(str_list):
 
 
 if __name__ == "__main__":
+
+    logging.basicConfig(level=logging.INFO)
+    
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(help='Workflow Type', dest="subparser_name")
 

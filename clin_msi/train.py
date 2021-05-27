@@ -1,10 +1,11 @@
 import os
 import typing
-import regex as re
+import logging
 from operator import itemgetter
 from collections import defaultdict
 
 import pysam
+import regex as re
 import pandas as pd
 
 from .count_normalization.normalize_counts import parse_raw_data
@@ -44,7 +45,7 @@ def train(
         #Load BAM file
         bam_file = pysam.AlignmentFile(row['bam_path'], "rb")
         df = pd.DataFrame()
-        print(f"extracting reads from {os.path.basename(row['bam_path'])}")
+        logging.info(f"extracting reads from {os.path.basename(row['bam_path'])}")
         for chr, start, stop in msi_location_list:
             #get expected repeat length from provided reference file
             length_dict = defaultdict(int)
@@ -103,7 +104,7 @@ def train(
         os.makedirs(output_dir)
 
     pickle_files = train_models(final_df, output_dir)
-    print(pickle_files)
+    logging.info(pickle_files)
 
 
 if __name__ == '__main__':
