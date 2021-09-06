@@ -130,11 +130,11 @@ def apply_model(infile,moddir,outfile,shap_plot_dir=None):
     df=df.rename(columns={sampcol:'samp'})
     dfnew,shapdict,curfeats=apply_mod_to_dataframe(df,moddir)
     dfnew[['samp','yprob']].to_csv(outfile,index=False)
-    # ## GRAB  SHAP DATA
-    # testdat,bmdict=grab_shap_data(dfnew,shapdict,curfeats)
-    # ## EXPORT SHAP PLOTS
-    # for i in range(len(testdat)):
-    #     shap_outfile=shap_plot_dir+"/shap_plot_"+str(i+1)+'.png'
-    #     shaprec=testdat.iloc[i]
-    #     shapdict_loc=bmdict[i]
-    #     build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)
+    ## GRAB  SHAP DATA
+    testdat,bmdict=grab_shap_data(dfnew,shapdict,curfeats)
+    ## EXPORT SHAP PLOTS
+    for i in range(len(testdat)):
+        shap_outfile=shap_plot_dir+"/shap_plot_"+str(i+1)+'.png'
+        shaprec=testdat.iloc[i]
+        shapdict_loc=bmdict[i]
+        build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)
