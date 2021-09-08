@@ -51,6 +51,39 @@ def apply_mod_to_dataframe(df,moddir):
     return(df,shapdict,incols)
 
 ## GATHER SHAP DATA
+## GATHER SHAP WHEN MEAN/STD COUNTS USED AS FEATURES
+def grab_shap_data_std(df,shapdict,incols):
+    nrun=len(shapdict)
+    shapdat=pd.concat(shapdict,axis=1)
+    shapdat.columns=[x[1] for x in shapdat.columns]
+    hf=df.copy()
+    for x in incols:
+        temp=shapdat[['shap_'+x+'_'+str(y+1) for y in range(nrun)]]
+        hf[x+'_mean']=hf[x].mean()
+        hf[x+'_std']=hf[x].std()
+        hf['shap_'+x+'_mean']=temp.mean(axis=1)
+        hf['shap_'+x+'_std']=temp.std(axis=1)
+    ibin=0
+    for x in incols:
+        hf['binnedshap_'+str(ibin)+'_'+x+'_mean']=hf[['shap_'+x+'_mean']].mean(axis=1)
+        hf['binnedshap_'+str(ibin)+'_'+x+'_std']=hf[['shap_'+x+'_mean']].std(axis=1)
+        hf['binnedval_'+str(ibin)+'_'+x+'_mean']=hf[[x+'_mean']].mean(axis=1)
+        hf['binnedval_'+str(ibin)+'_'+x+'_std']=hf[[x+'_std']].std(axis=1)
+    bmdict={}
+    for i in hf.index:
+        logging.info(i)
+        currec=hf.loc[i]
+        mdict={}
+        for marker in incols:
+            keydesc=marker
+            locdict={}
+            for stat in ['mean','std']:
+                for dattype in ['shap','val']:
+                    locdict[dattype+'_'+stat]=currec['binned'+dattype+'_'+str(ibin)+'_'+marker+'_'+stat]
+            mdict[keydesc]=locdict
+        bmdict[i]=mdict.copy()
+    return(hf,bmdict)
+
 def grab_shap_data(df,shapdict,incols):
     nrun=len(shapdict)
     shapdat=pd.concat(shapdict,axis=1)
@@ -122,7 +155,7 @@ def build_n_save_shap_plot(currec,mdict,shap_plot_file):
 
 
 ## MAIN RUNNER
-def apply_model(infile,moddir,outfile,shap_plot_dir=None):
+def apply_model(infile,moddir,outfile,normalization_scheme,shap_plot_dir=None):
     df=pd.read_csv(infile)
     sampcol='SAMPLE_NAME'
     if sampcol not in df:
@@ -130,11 +163,15 @@ def apply_model(infile,moddir,outfile,shap_plot_dir=None):
     df=df.rename(columns={sampcol:'samp'})
     dfnew,shapdict,curfeats=apply_mod_to_dataframe(df,moddir)
     dfnew[['samp','yprob']].to_csv(outfile,index=False)
-    # ## GRAB  SHAP DATA
-    # testdat,bmdict=grab_shap_data(dfnew,shapdict,curfeats)
-    # ## EXPORT SHAP PLOTS
-    # for i in range(len(testdat)):
-    #     shap_outfile=shap_plot_dir+"/shap_plot_"+str(i+1)+'.png'
-    #     shaprec=testdat.iloc[i]
-    #     shapdict_loc=bmdict[i]
-    #     build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)
+    if shap_plot_dir is not None: 
+    # ## GRAB SHAP DATA ## JG
+        if normalization_scheme=='z':
+            testdat,bmdict=grab_shap_data(dfnew,shapdict,curfeats)
+        elif normalization_scheme=='std_u':
+            testdat,bmdict=grab_shap_data_std(dfnew,shapdict,curfeats)
+        ## EXPORT SHAP PLOTS
+        for i in range(len(testdat)):
+            shap_outfile=shap_plot_dir+"/shap_plot_"+str(i+1)+'.png'
+            shaprec=testdat.iloc[i]
+            shapdict_loc=bmdict[i]
+            build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)
