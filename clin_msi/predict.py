@@ -6,9 +6,8 @@ from collections import defaultdict
 import pysam
 import pandas as pd
 
-from .count_normalization.normalize_counts import parse_raw_data
-from .msi_model_scripts.apply_msi_model import apply_model
-
+from .count_normalization.normalize_counts import parse_raw_data  
+from .msi_model_scripts.apply_msi_model import apply_model        
 
 def repeat_finder(s):
     #Taken from https://stackoverflow.com/questions/9079797/detect-repetitions-in-string
@@ -36,7 +35,6 @@ def predict(
         model_dir: str
     ) -> None:
     """Prediction workflow main function."""
-
     msi_location_list = parse_input_file(input_file)
 
     #Load BAM file
@@ -96,7 +94,8 @@ def predict(
 
     #apply model to normalized msi counts
     final_results_file = os.path.join(output_dir, sample_name + '_MSIscore.txt')
-    apply_model(os.path.join(output_dir, sample_name + '_normalized.csv'), model_dir, final_results_file)
-
+    apply_model(os.path.join(output_dir, sample_name + '_normalized.csv'), model_dir, final_results_file,
+               normalization_scheme,output_dir+'/shap')
+    
 if __name__ == '__main__':
     predict()
