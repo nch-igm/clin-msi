@@ -12,8 +12,8 @@ def file_path_type(path: str) -> str:
     return path
 
 
-def comma_str_to_list(str_list):
-    return str_list.split(",")
+#def comma_str_to_list(str_list):
+#    return str_list.split(",")
 
 
 def main() -> None:
@@ -23,7 +23,7 @@ def main() -> None:
 
     # train configuration
     train_parser = subparsers.add_parser("train")
-    train_parser.add_argument('--input-bam-list', type=comma_str_to_list, required=True, help="input file with BAM paths and MSI status")
+    train_parser.add_argument('--input-bam-list', type=file_path_type, required=True, help="input file with BAM paths and MSI status")
 
     # predict configuration
     predict_parser = subparsers.add_parser("predict")

@@ -6,8 +6,8 @@ from collections import defaultdict
 import pysam
 import pandas as pd
 
-from count_normalization.normalize_counts import parse_raw_data
-from msi_model_scripts.apply_msi_model import apply_model
+from .count_normalization.normalize_counts import parse_raw_data
+from .msi_model_scripts.apply_msi_model import apply_model
 
 
 def repeat_finder(s):
