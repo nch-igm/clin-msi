@@ -24,7 +24,7 @@ def grab_marker_int(x):
         return(int(x[1:]))
 def apply_mod_to_dataframe(df,moddir):
     shapdict={}
-    nrun=500
+    nrun=10
     ## DF ..combdat is 49, comb is 30
     #df=pd.read_csv(infile)
     j=0
@@ -141,8 +141,9 @@ def build_n_save_shap_plot(currec,mdict,shap_plot_file):
     data_x=sdat.markerbin
     data_y=sdat.shap_mean
     data_color=sdat.val_mean_norm*1.0
+    data_color_norm=((data_color-data_color.min())/(data_color.max()-data_color.min()))
     my_cmap=plt.cm.get_cmap('RdYlGn_r')
-    colors=my_cmap(data_color)
+    colors=my_cmap(data_color_norm)
 
     fig, ax = plt.subplots()
     rects=ax.barh(data_x, data_y, color=colors)
@@ -175,3 +176,29 @@ def apply_model(infile,moddir,outfile,normalization_scheme,shap_plot_dir=None):
             shaprec=testdat.iloc[i]
             shapdict_loc=bmdict[i]
             build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)
+
+def apply_model_trunc(infile,moddir,outfile,normalization_scheme,shap_plot_dir=None):
+    df=pd.read_csv(infile)
+    sampcol='SAMPLE_NAME'
+    if sampcol not in df:
+        df[sampcol]=['SAMPLE_' + str(i+1) for i in range(len(df))]
+    df=df.rename(columns={sampcol:'samp'})
+    moddir='/igm/home/jbg001/git/msi/dat/mods_std_091321'
+    dfnew,shapdict,curfeats=apply_mod_to_dataframe(df,moddir)
+    #dfnew[['samp','yprob']].to_csv(outfile,index=False)
+    return(dfnew,shapdict,curfeats)
+
+    if shap_plot_dir is not None: 
+    # ## GRAB SHAP DATA ## JG
+        if normalization_scheme=='z':
+            testdat,bmdict=grab_shap_data(dfnew,shapdict,curfeats)
+        elif normalization_scheme=='std_u':
+            testdat,bmdict=grab_shap_data_std(dfnew,shapdict,curfeats)
+        ## EXPORT SHAP PLOTS
+        for i in range(len(testdat)):
+            shap_outfile=shap_plot_dir+"/shap_plot_"+str(i+1)+'.png'
+            shaprec=testdat.iloc[i]
+            shapdict_loc=bmdict[i]
+            build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)
+
+            
