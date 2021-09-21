@@ -24,7 +24,7 @@ def grab_marker_int(x):
         return(int(x[1:]))
 def apply_mod_to_dataframe(df,moddir):
     shapdict={}
-    nrun=10
+    nrun=500
     ## DF ..combdat is 49, comb is 30
     #df=pd.read_csv(infile)
     j=0
@@ -183,7 +183,6 @@ def apply_model_trunc(infile,moddir,outfile,normalization_scheme,shap_plot_dir=N
     if sampcol not in df:
         df[sampcol]=['SAMPLE_' + str(i+1) for i in range(len(df))]
     df=df.rename(columns={sampcol:'samp'})
-    moddir='/igm/home/jbg001/git/msi/dat/mods_std_091321'
     dfnew,shapdict,curfeats=apply_mod_to_dataframe(df,moddir)
     #dfnew[['samp','yprob']].to_csv(outfile,index=False)
     return(dfnew,shapdict,curfeats)
