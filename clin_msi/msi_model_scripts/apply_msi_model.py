@@ -26,7 +26,6 @@ def apply_mod_to_dataframe(df,moddir):
     shapdict={}
     nrun=500
     ## DF ..combdat is 49, comb is 30
-    #df=pd.read_csv(infile)
     j=0
     modfiles = glob.glob(os.path.join(moddir, "*pkl"))
     for modfile in modfiles:
@@ -123,12 +122,12 @@ def grab_shap_data(df,shapdict,incols):
     return(hf,bmdict)
 
 ## BUILD SHAP PLOTS
-def build_n_save_shap_plot(currec,mdict,shap_plot_file):
+def build_n_save_shap_plot(currec,mdict,shap_plot_file, shap_feature_rank):
+    shap_feature_rank = open(shap_feature_rank, 'w')
     sdat=pd.DataFrame(mdict).transpose().reset_index().rename(columns={'index':'markerbin'})
     sdat['shapabs']=sdat['shap_mean'].apply(abs)
     sdat=sdat.sort_values('shapabs',ascending=True)
     sdat['val_mean_norm']=sdat['val_mean'].apply(lambda x: math.sqrt(x-sdat.val_mean.min()+.00001))
-    #sdat['val_mean_norm']=sdat['val_mean'].apply(lambda x: min(x,1))
     sdat['val_mean_discrete']=sdat['val_mean'].apply(lambda x: -1 if x <= 0 else 0 if x<=3 else 1)
     sdat['color']=sdat['val_mean_discrete'].apply(lambda x: 'green' if x==-1 else 'orange' if x==0 else 'red')
     if ((sdat.shapabs>0.005).mean() > 0):
@@ -136,7 +135,6 @@ def build_n_save_shap_plot(currec,mdict,shap_plot_file):
     else:
         sdat=sdat.head(10)
     colguide=sdat.val_mean_discrete
-    #sdat=sdat[sdat.val_mean < 2]
     tempdict={};tempdict[0]='MSS';tempdict[1]='MSI'
     data_x=sdat.markerbin
     data_y=sdat.shap_mean
@@ -152,52 +150,25 @@ def build_n_save_shap_plot(currec,mdict,shap_plot_file):
     cbar = plt.colorbar(sm)
     cbar.set_label('Normalized read-count score', rotation=270,labelpad=25)
     plt.title('; '.join([currec.samp,'msi_conflevel='+str(round(currec.yprob,3))]))
-    plt.savefig(shap_plot_file,bbox_inches='tight')
+    plt.savefig(shap_plot_file, bbox_inches='tight')
+    for marker, value in zip(data_x, data_y):
+        shap_feature_rank.write(f'{marker}\t{value}\n')
 
 
 ## MAIN RUNNER
-def apply_model(infile,moddir,outfile,normalization_scheme,shap_plot_dir=None):
+def apply_model(infile,moddir,outfile,normalization_scheme,output_dir, sample_name):
     df=pd.read_csv(infile)
-    sampcol='SAMPLE_NAME'
-    if sampcol not in df:
-        df[sampcol]=['SAMPLE_' + str(i+1) for i in range(len(df))]
-    df=df.rename(columns={sampcol:'samp'})
-    dfnew,shapdict,curfeats=apply_mod_to_dataframe(df,moddir)
-    dfnew[['samp','yprob']].to_csv(outfile,index=False)
-    if shap_plot_dir is not None: 
+    df['samp']=[sample_name]
+    dfnew,shapdict,curfeats=apply_mod_to_dataframe(df, moddir)
+    dfnew[['samp','yprob']].to_csv(outfile, index=False)
     # ## GRAB SHAP DATA ## JG
-        if normalization_scheme=='z':
-            testdat,bmdict=grab_shap_data(dfnew,shapdict,curfeats)
-        elif normalization_scheme=='std_u':
-            testdat,bmdict=grab_shap_data_std(dfnew,shapdict,curfeats)
-        ## EXPORT SHAP PLOTS
-        for i in range(len(testdat)):
-            shap_outfile=shap_plot_dir+"/shap_plot_"+str(i+1)+'.png'
-            shaprec=testdat.iloc[i]
-            shapdict_loc=bmdict[i]
-            build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)
-
-def apply_model_trunc(infile,moddir,outfile,normalization_scheme,shap_plot_dir=None):
-    df=pd.read_csv(infile)
-    sampcol='SAMPLE_NAME'
-    if sampcol not in df:
-        df[sampcol]=['SAMPLE_' + str(i+1) for i in range(len(df))]
-    df=df.rename(columns={sampcol:'samp'})
-    dfnew,shapdict,curfeats=apply_mod_to_dataframe(df,moddir)
-    #dfnew[['samp','yprob']].to_csv(outfile,index=False)
-    return(dfnew,shapdict,curfeats)
-
-    if shap_plot_dir is not None: 
-    # ## GRAB SHAP DATA ## JG
-        if normalization_scheme=='z':
-            testdat,bmdict=grab_shap_data(dfnew,shapdict,curfeats)
-        elif normalization_scheme=='std_u':
-            testdat,bmdict=grab_shap_data_std(dfnew,shapdict,curfeats)
-        ## EXPORT SHAP PLOTS
-        for i in range(len(testdat)):
-            shap_outfile=shap_plot_dir+"/shap_plot_"+str(i+1)+'.png'
-            shaprec=testdat.iloc[i]
-            shapdict_loc=bmdict[i]
-            build_n_save_shap_plot(shaprec,shapdict_loc,shap_outfile)
-
-            
+    if normalization_scheme=='z':
+        testdat, bmdict=grab_shap_data(dfnew, shapdict, curfeats)
+    elif normalization_scheme=='std_u':
+        testdat, bmdict=grab_shap_data_std(dfnew,shapdict, curfeats)
+    ## EXPORT SHAP PLOTS
+    shap_outfile=os.path.join(output_dir, sample_name + '_shap_plot.png')
+    shap_feature_rank=os.path.join(output_dir, sample_name + '_shap_feature_rank.txt')
+    shaprec=testdat.iloc[0]
+    shapdict_loc=bmdict[0]
+    build_n_save_shap_plot(shaprec, shapdict_loc, shap_outfile, shap_feature_rank)

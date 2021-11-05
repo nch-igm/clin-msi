@@ -87,15 +87,16 @@ def predict(
 
         df['Repeat_Length'] = length_list
         df[f'{chr}:{start}-{stop}'] = repeat_count_list
-    df.to_csv('test_raw_count.csv', index=False)
+    
+    df.to_csv(os.path.join(output_dir, sample_name + '_raw_counts.csv'), index=False)
+    
     normalized_df = parse_raw_data(df, sample_name, normalization_scheme)
-
     normalized_df.to_csv(os.path.join(output_dir, sample_name + '_normalized.csv'), index=False)
 
     #apply model to normalized msi counts
     final_results_file = os.path.join(output_dir, sample_name + '_MSIscore.txt')
     apply_model(os.path.join(output_dir, sample_name + '_normalized.csv'), model_dir, final_results_file,
-               normalization_scheme,output_dir+'/shap')
+               normalization_scheme,output_dir,sample_name)
     
 if __name__ == '__main__':
     predict()
